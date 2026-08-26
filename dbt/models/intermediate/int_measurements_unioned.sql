@@ -1,9 +1,9 @@
--- Menggabungkan kedua domain menjadi satu aliran.
+-- Unions both domains into a single stream.
 --
--- Keputusan: cuaca dan kualitas udara disatukan dalam bentuk panjang
--- (satu baris per variabel), bukan dilebarkan menjadi satu kolom per
--- variabel. Alasannya, daftar variabel bisa bertambah tanpa mengubah
--- struktur tabel, dan penambahan sumber baru tidak memaksa migrasi skema.
+-- Decision: weather and air quality are combined in long format (one row per
+-- variable) rather than pivoted into one column per variable. The list of
+-- variables will grow over time, and long format absorbs that without a
+-- schema migration.
 
 with weather as (
     select * from {{ ref('stg_weather_hourly') }}

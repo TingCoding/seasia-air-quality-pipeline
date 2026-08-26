@@ -1,4 +1,4 @@
--- Dimensi tanggal, dibangun dari rentang data yang benar-benar ada.
+-- Date dimension, built from the range of data actually present.
 
 with bounds as (
     select

@@ -1,7 +1,7 @@
-"""Bentuk data tunggal yang dipakai seluruh pipeline.
+"""The single data shape used throughout the pipeline.
 
-Semua klien API mengembalikan daftar Measurement, sehingga pemuat data tidak
-perlu tahu dari sumber mana data berasal.
+Every API client returns a list of Measurement, so the loader never needs to
+know which source the data came from.
 """
 
 from dataclasses import dataclass
@@ -11,7 +11,7 @@ from datetime import datetime
 @dataclass(frozen=True, slots=True)
 class Measurement:
     location_key: str
-    observed_at: datetime      # selalu UTC
+    observed_at: datetime      # always UTC
     variable: str
     value: float | None
     unit: str | None

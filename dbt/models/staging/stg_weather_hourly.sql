@@ -1,5 +1,5 @@
--- Membersihkan data cuaca mentah: penamaan diseragamkan, tipe dipastikan,
--- dan kategori variabel ditambahkan agar mudah disaring di lapisan berikutnya.
+-- Cleans raw weather data: consistent naming, explicit casts, and a domain tag
+-- so downstream layers can filter without knowing the source table.
 
 with source as (
     select * from {{ source('raw', 'weather_hourly') }}

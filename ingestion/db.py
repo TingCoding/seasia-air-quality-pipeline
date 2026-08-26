@@ -1,4 +1,4 @@
-"""Koneksi database dan penulisan idempotent ke lapisan raw."""
+"""Database connection and idempotent writes into the raw layer."""
 
 import os
 from collections.abc import Iterable, Iterator
@@ -43,14 +43,14 @@ def upsert_measurements(
     measurements: Iterable[Measurement],
     batch_size: int = 5000,
 ) -> int:
-    """Tulis pengukuran ke tabel raw.
+    """Write measurements into a raw table.
 
-    Memakai ON CONFLICT DO UPDATE terhadap kunci primer gabungan, sehingga
-    menjalankan ulang proses untuk rentang tanggal yang sama tidak
-    menggandakan baris. Inilah yang membuat ingestion idempotent.
+    Uses ON CONFLICT DO UPDATE against the composite primary key, so re-running
+    the same date range never duplicates rows. This is what makes ingestion
+    idempotent.
     """
     if table not in ALLOWED_TABLES:
-        raise ValueError(f"Tabel tidak dikenal: {table}")
+        raise ValueError(f"Unknown table: {table}")
 
     sql = f"""
         INSERT INTO {table}

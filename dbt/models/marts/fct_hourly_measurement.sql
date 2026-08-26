@@ -1,8 +1,8 @@
--- Tabel fakta. Satu baris mewakili satu pengukuran:
--- lokasi x waktu x variabel x sumber.
+-- Fact table. One row is one measurement:
+-- location x hour x variable x source.
 --
--- Waktu lokal dihitung di sini, bukan disimpan sejak lapisan raw, agar
--- lapisan mentah tetap netral terhadap zona waktu.
+-- Local time is derived here rather than stored from the raw layer, keeping
+-- the raw layer neutral with respect to timezones.
 
 with measurements as (
     select * from {{ ref('int_measurements_unioned') }}

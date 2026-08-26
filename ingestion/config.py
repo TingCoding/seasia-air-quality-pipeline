@@ -1,8 +1,7 @@
-"""Konfigurasi terpusat: daftar lokasi dan parameter yang diambil.
+"""Central configuration: which locations to load and which variables to fetch.
 
-Daftar kota sengaja dipisahkan ke sini agar cakupan project bisa diubah
-tanpa menyentuh kode ingestion. Sesuaikan setelah mengecek ketersediaan
-stasiun OpenAQ di tiap kota.
+The city list lives here so the project's scope can change without touching
+ingestion code. Adjust it after checking station availability per city.
 """
 
 from dataclasses import dataclass
@@ -10,7 +9,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Location:
-    key: str          # dipakai sebagai kunci di tabel raw
+    key: str          # used as the key in the raw tables
     city: str
     country: str
     latitude: float
@@ -43,6 +42,6 @@ AIR_QUALITY_VARIABLES = [
     "ozone",
 ]
 
-# Semua waktu diseragamkan ke UTC di lapisan raw.
-# Konversi ke waktu lokal dilakukan di lapisan marts.
+# Everything is stored in UTC at the raw layer.
+# Conversion to local time happens in the marts layer.
 STORAGE_TIMEZONE = "UTC"

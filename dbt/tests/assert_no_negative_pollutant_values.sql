@@ -1,5 +1,5 @@
--- Konsentrasi polutan tidak mungkin negatif.
--- Nilai negatif menandakan kesalahan kalibrasi sensor atau kesalahan penguraian.
+-- Pollutant concentrations cannot be negative.
+-- A negative value points to sensor calibration faults or a parsing error.
 
 select
     measurement_key,

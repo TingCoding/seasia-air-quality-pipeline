@@ -1,10 +1,10 @@
-"""Klien Open-Meteo.
+"""Open-Meteo client.
 
-Dua endpoint dipakai: arsip cuaca historis dan kualitas udara. Keduanya
-mengembalikan struktur yang sama — objek `hourly` berisi daftar waktu dan
-satu daftar nilai per variabel — sehingga penguraiannya bisa dipakai bersama.
+Two endpoints are used: the historical weather archive and air quality. Both
+return the same structure — an `hourly` object holding a list of timestamps and
+one list of values per variable — so a single parser serves both.
 
-Open-Meteo tidak memerlukan API key.
+Open-Meteo requires no API key.
 """
 
 from datetime import date, datetime, timezone
@@ -36,10 +36,10 @@ RETRYABLE = (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError)
     reraise=True,
 )
 def _get(client: httpx.Client, url: str, params: dict) -> dict:
-    """Satu panggilan HTTP dengan percobaan ulang bertahap.
+    """A single HTTP call with exponential backoff.
 
-    Jeda tunggu digandakan setiap kegagalan agar tidak membebani API gratis
-    saat sedang bermasalah.
+    The wait doubles after each failure so a free API is not hammered while it
+    is already struggling.
     """
     response = client.get(url, params=params, timeout=30.0)
     response.raise_for_status()
@@ -47,11 +47,11 @@ def _get(client: httpx.Client, url: str, params: dict) -> dict:
 
 
 def _parse_hourly(payload: dict, location_key: str, source: str) -> list[Measurement]:
-    """Ubah respons Open-Meteo menjadi daftar Measurement.
+    """Turn an Open-Meteo response into a list of Measurement.
 
-    Nilai null dipertahankan, tidak dibuang. Lubang data adalah informasi —
-    membuangnya di sini akan menyembunyikan masalah kualitas data yang justru
-    ingin kita deteksi di Tahap 3.
+    Null values are kept, not discarded. A gap in the data is information;
+    dropping it here would hide exactly the data quality problems the tests
+    downstream are meant to surface.
     """
     hourly = payload.get("hourly") or {}
     units = payload.get("hourly_units") or {}
@@ -76,7 +76,7 @@ def _parse_hourly(payload: dict, location_key: str, source: str) -> list[Measure
 
 
 def _to_utc(iso_time: str) -> datetime:
-    """Open-Meteo mengembalikan waktu tanpa penanda zona saat timezone=UTC."""
+    """Open-Meteo returns timestamps without a zone marker when timezone=UTC."""
     parsed = datetime.fromisoformat(iso_time)
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)

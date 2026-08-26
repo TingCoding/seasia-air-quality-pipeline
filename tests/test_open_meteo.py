@@ -1,4 +1,4 @@
-"""Uji penguraian respons Open-Meteo tanpa memanggil API sungguhan."""
+"""Parsing tests for Open-Meteo responses, with no real API calls."""
 
 from datetime import date, datetime, timezone
 
@@ -53,7 +53,7 @@ def test_times_are_stored_as_utc():
 
 @respx.mock
 def test_null_values_are_kept_not_dropped():
-    """Lubang data adalah informasi, bukan sampah — harus ikut tersimpan."""
+    """A gap in the data is information, not noise. It must be preserved."""
     respx.get(open_meteo.ARCHIVE_URL).mock(
         return_value=httpx.Response(200, json=SAMPLE)
     )

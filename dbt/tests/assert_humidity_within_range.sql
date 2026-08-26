@@ -1,4 +1,4 @@
--- Kelembapan relatif harus berada di antara 0 dan 100 persen.
+-- Relative humidity must fall between 0 and 100 percent.
 
 select
     measurement_key,

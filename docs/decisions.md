@@ -1,102 +1,110 @@
-# Catatan keputusan teknis
+# Decision log
 
-Berisi keputusan yang diambil selama pengembangan beserta alasannya.
-Format: keputusan, konteks, alasan, konsekuensi.
-
----
-
-## 1. Menyimpan lapisan `raw` apa adanya
-
-**Keputusan.** Respons API disimpan ke skema `raw` tanpa transformasi apa pun.
-
-**Alasan.** Kalau logika transformasi ternyata salah, data bisa dibangun ulang
-tanpa memanggil API lagi. Ini juga membuat batas tanggung jawab jelas:
-ingestion hanya memindahkan data, dbt yang mengubah bentuknya.
-
-**Konsekuensi.** Penyimpanan lebih boros, dan ada satu lapisan tambahan yang
-harus dipelihara.
+Technical decisions taken during development, with the reasoning behind them.
+Format: decision, context, why, consequences.
 
 ---
 
-## 2. Semua waktu disimpan dalam UTC
+## 1. Raw data is stored verbatim
 
-**Keputusan.** Kolom `observed_at` bertipe `TIMESTAMPTZ` dan selalu UTC.
-Konversi ke waktu lokal dilakukan di lapisan marts.
+**Decision.** API responses are written to the `raw` schema with no transformation.
 
-**Alasan.** Enam kota berada di empat zona waktu berbeda. Menyimpan waktu lokal
-membuat perbandingan antar kota rawan salah, terutama saat mengagregasi per jam.
+**Why.** If transformation logic turns out to be wrong, the warehouse can be rebuilt
+without calling the APIs again. It also draws a clean boundary of responsibility:
+ingestion moves data, dbt reshapes it.
 
-**Konsekuensi.** Query untuk analisis harian per kota perlu konversi eksplisit.
-
----
-
-## 3. Kunci primer gabungan, bukan surrogate key, di lapisan raw
-
-**Keputusan.** `(location_key, observed_at, variable, source)` sebagai primary key.
-
-**Alasan.** Membuat proses pemuatan idempotent — menjalankan ulang ingestion
-untuk rentang tanggal yang sama tidak menggandakan baris. Ini penting karena
-API kadang gagal di tengah jalan dan harus diulang.
-
-**Konsekuensi.** Penulisan harus memakai `ON CONFLICT DO UPDATE`, sedikit lebih
-lambat dibanding `INSERT` biasa.
+**Consequences.** More storage, and one extra layer to maintain.
 
 ---
 
-<!-- TODO: tambahkan keputusan berikutnya seiring pengerjaan -->
+## 2. All timestamps are stored in UTC
 
-## 4. Data disimpan dalam bentuk panjang, bukan lebar
+**Decision.** `observed_at` is `TIMESTAMPTZ` and always UTC. Conversion to local time
+happens in the marts layer.
 
-**Keputusan.** Tabel fakta memakai satu baris per variabel
-(`location x waktu x variabel x sumber`), bukan satu kolom per variabel.
+**Why.** The six cities span four timezones. Storing local time makes cross-city
+comparison error-prone, particularly when aggregating by hour.
 
-**Alasan.** Daftar variabel akan bertambah seiring waktu. Bentuk lebar
-memaksa perubahan skema setiap kali ada polutan atau variabel cuaca baru,
-sementara bentuk panjang cukup menambah baris.
-
-**Konsekuensi.** Query perbandingan antar variabel perlu operasi pivot, dan
-jumlah barisnya jauh lebih banyak. Untuk kebutuhan analisis harian, ini
-diatasi oleh model agregat `agg_daily_air_quality`.
+**Consequences.** Per-city daily analysis needs an explicit conversion.
 
 ---
 
-## 5. Kelengkapan data ikut dilaporkan, bukan disembunyikan
+## 3. Composite primary key at the raw layer, not a surrogate key
 
-**Keputusan.** `agg_daily_air_quality` menyertakan kolom
-`measurement_completeness_pct`.
+**Decision.** `(location_key, observed_at, variable, source)` as the primary key.
 
-**Alasan.** Rata-rata harian dari 3 jam data tidak setara dengan rata-rata
-dari 24 jam. Menyajikan keduanya sebagai angka tunggal tanpa keterangan akan
-menyesatkan pengguna data.
+**Why.** It makes loading idempotent — re-running ingestion for the same date range
+does not duplicate rows. This matters because API calls do fail halfway and have to be
+retried.
 
-**Konsekuensi.** Pengguna data harus memutuskan sendiri ambang kelengkapan
-yang dapat diterima.
-
----
-
-## 6. Waktu lokal dihitung di lapisan marts
-
-**Keputusan.** Kolom `observed_at_local` dihitung di `fct_hourly_measurement`
-memakai zona waktu dari `dim_location`, bukan disimpan sejak lapisan raw.
-
-**Alasan.** Lapisan raw harus netral dan tidak kehilangan informasi. Zona
-waktu adalah keputusan penyajian, bukan fakta pengukuran.
-
-**Konsekuensi.** Perubahan zona waktu suatu kota cukup diperbaiki di seed,
-tanpa memuat ulang data dari API.
+**Consequences.** Writes must use `ON CONFLICT DO UPDATE`, marginally slower than a
+plain `INSERT`.
 
 ---
 
-## 7. Versi dbt dikunci tepat, bukan sebagai rentang
+## 4. Data is stored in long format, not wide
 
-**Keputusan.** `dbt-core==1.11.14` dan `dbt-postgres==1.11.0`, bukan `dbt-postgres>=1.8,<2.0`.
+**Decision.** The fact table holds one row per variable
+(`location x hour x variable x source`) rather than one column per variable.
 
-**Alasan.** Dua masalah nyata muncul saat memakai rentang. Pertama, `dbt-postgres`
-menyatakan kebutuhannya sebagai `dbt-core<2.0,>=1.8.0rc1`; karena batas bawahnya
-pra-rilis, pip ikut memilih pra-rilis dan memasang dbt 2.0 beta, yang belum
-mendukung PostgreSQL. Kedua, `dbt-core` 1.12 menambah dependensi yang harus
-diunduh saat instalasi, sehingga pemasangan menjadi rapuh terhadap gangguan jaringan.
+**Why.** The list of variables will grow. A wide format forces a schema migration
+every time a new pollutant or weather variable is added; long format only adds rows.
 
-**Konsekuensi.** Pembaruan versi harus dilakukan sengaja, tidak otomatis. Itu justru
-yang diinginkan: repo yang jalan hari ini harus tetap jalan bulan depan tanpa satu
-baris kode pun berubah.
+**Consequences.** Comparing variables side by side requires a pivot, and row counts are
+much higher. For everyday analysis this is handled by `agg_daily_air_quality`.
+
+---
+
+## 5. Completeness is reported, not hidden
+
+**Decision.** `agg_daily_air_quality` carries a `measurement_completeness_pct` column.
+
+**Why.** A daily average computed from three hours of data is not the same as one
+computed from twenty-four. Presenting both as a single unlabelled number would mislead
+whoever consumes the data.
+
+**Consequences.** Consumers have to decide for themselves what completeness threshold
+is acceptable.
+
+---
+
+## 6. Local time is derived in the marts layer
+
+**Decision.** `observed_at_local` is computed in `fct_hourly_measurement` using the
+timezone from `dim_location`, rather than stored from the raw layer.
+
+**Why.** The raw layer should stay neutral and lose no information. Timezone is a
+presentation decision, not a fact about the measurement.
+
+**Consequences.** Correcting a city's timezone means fixing the seed, not reloading
+data from the API.
+
+---
+
+## 7. Dependency versions are pinned exactly
+
+**Decision.** `dbt-core==1.11.14` and `dbt-postgres==1.11.0`, not `dbt-postgres>=1.8,<2.0`.
+
+**Why.** Two real problems surfaced with a loose range. First, `dbt-postgres` declares
+its requirement as `dbt-core<2.0,>=1.8.0rc1`; because the lower bound is a pre-release,
+pip considered pre-releases eligible and installed the dbt 2.0 beta, which does not
+support PostgreSQL. Second, `dbt-core` 1.12 added a dependency that downloads a large
+binary at install time, making installation fragile on an unstable connection.
+
+**Consequences.** Upgrades have to be deliberate rather than automatic. That is the
+point: a repository that works today should still work next month without a single
+line of code changing.
+
+---
+
+## 8. Service ports are configurable, not hardcoded
+
+**Decision.** Ports in `docker-compose.yml` read from environment variables with
+defaults, for example `${ADMINER_PORT:-8081}`.
+
+**Why.** Port 8080 was already occupied on the development machine by an unrelated
+service. A repository with hardcoded ports fails on someone else's machine for reasons
+that have nothing to do with the code, and a reviewer who cannot start it will simply
+stop there.
+
+**Consequences.** One more variable to document in `.env.example`.

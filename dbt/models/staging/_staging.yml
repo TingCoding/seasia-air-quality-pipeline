@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: stg_weather_hourly
-    description: Data cuaca yang sudah dibersihkan dan diseragamkan penamaannya.
+    description: Weather data with consistent column naming and explicit types.
     columns:
       - name: location_key
         tests: [not_null]
@@ -20,7 +20,7 @@ models:
               values: [weather]
 
   - name: stg_air_quality_hourly
-    description: Data kualitas udara yang sudah dibersihkan.
+    description: Air quality data with consistent column naming and explicit types.
     columns:
       - name: location_key
         tests: [not_null]

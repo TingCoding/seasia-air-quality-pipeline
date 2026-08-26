@@ -1,9 +1,9 @@
--- Ringkasan harian polutan per kota.
+-- Daily pollutant summary per city.
 --
--- Kolom measurement_completeness_pct sengaja disertakan agar pengguna data
--- tahu seberapa lengkap dasar perhitungan rata-rata harian ini. Rata-rata
--- dari 3 jam data tidak setara dengan rata-rata dari 24 jam, dan perbedaan
--- itu harus terlihat, bukan disembunyikan.
+-- measurement_completeness_pct is included deliberately so consumers can see
+-- how much observation each daily average rests on. A mean computed from
+-- three hours of data is not the same as one computed from twenty-four, and
+-- that difference should be visible rather than hidden.
 
 with facts as (
     select *

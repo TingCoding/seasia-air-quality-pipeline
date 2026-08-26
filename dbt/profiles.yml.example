@@ -1,5 +1,5 @@
-# Salin menjadi profiles.yml lalu isi passwordnya.
-# profiles.yml sudah masuk .gitignore — jangan pernah di-commit.
+# Copy this file to profiles.yml and fill in the password.
+# profiles.yml is gitignored and must never be committed.
 
 seasia_air_quality:
   target: dev
@@ -9,7 +9,7 @@ seasia_air_quality:
       host: localhost
       port: 5432
       user: aq_user
-      password: isi_password_anda
+      password: your_password_here
       dbname: air_quality
       schema: dbt
       threads: 4

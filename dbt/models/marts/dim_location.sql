@@ -1,5 +1,5 @@
--- Dimensi lokasi, bersumber dari seed agar metadata kota (nama, negara,
--- zona waktu) tidak tergantung pada data yang masuk dari API.
+-- Location dimension, sourced from a seed so that city metadata (name,
+-- country, timezone) does not depend on whatever the API happens to return.
 
 with seed as (
     select * from {{ ref('locations') }}

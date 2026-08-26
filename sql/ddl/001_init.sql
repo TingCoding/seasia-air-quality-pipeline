@@ -1,5 +1,5 @@
--- Dijalankan otomatis saat container PostgreSQL pertama kali dibuat.
--- Lapisan raw menyimpan respons API apa adanya, tanpa transformasi.
+-- Applied automatically the first time the PostgreSQL container is created.
+-- The raw layer stores API responses verbatim, with no transformation.
 
 CREATE SCHEMA IF NOT EXISTS raw;
 CREATE SCHEMA IF NOT EXISTS audit;
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS raw.air_quality_hourly (
     PRIMARY KEY (location_key, observed_at, variable, source)
 );
 
--- Catatan hasil pemeriksaan kualitas data (dipakai mulai Tahap 3).
+-- Record of data quality check results.
 CREATE TABLE IF NOT EXISTS audit.data_quality_log (
     id             BIGSERIAL,
     checked_at     TIMESTAMPTZ NOT NULL DEFAULT now(),

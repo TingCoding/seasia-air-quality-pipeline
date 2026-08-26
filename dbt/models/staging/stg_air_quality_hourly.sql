@@ -1,4 +1,4 @@
--- Sama seperti stg_weather_hourly, untuk domain kualitas udara.
+-- Same as stg_weather_hourly, for the air quality domain.
 
 with source as (
     select * from {{ source('raw', 'air_quality_hourly') }}

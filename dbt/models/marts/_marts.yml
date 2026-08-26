@@ -2,21 +2,21 @@ version: 2
 
 models:
   - name: dim_location
-    description: Dimensi lokasi beserta metadata geografis dan zona waktunya.
+    description: Location dimension with geographic metadata and timezone.
     columns:
       - name: location_key
-        description: Kunci utama lokasi.
+        description: Primary key for a location.
         tests: [unique, not_null]
       - name: city
         tests: [not_null]
       - name: timezone
-        description: Nama zona waktu IANA, dipakai untuk menghitung waktu lokal.
+        description: IANA timezone name, used to derive local time in the fact table.
         tests: [not_null]
       - name: has_measurements
-        description: Menandai apakah lokasi ini benar-benar punya data terkumpul.
+        description: Whether any measurements have actually been collected for this location.
 
   - name: dim_date
-    description: Dimensi tanggal, dibangun dari rentang data yang tersedia.
+    description: Date dimension, built from the range of data present.
     columns:
       - name: date_day
         tests: [unique, not_null]
@@ -28,8 +28,8 @@ models:
 
   - name: fct_hourly_measurement
     description: >
-      Tabel fakta utama. Satu baris mewakili satu pengukuran pada satu lokasi,
-      satu jam, satu variabel, dari satu sumber.
+      The central fact table. One row is one measurement at one location, one
+      hour, one variable, from one source.
     columns:
       - name: measurement_key
         tests: [unique, not_null]
@@ -47,12 +47,12 @@ models:
       - name: observed_at
         tests: [not_null]
       - name: measurement_value
-        description: Boleh NULL. Ketiadaan nilai ditandai kolom is_missing.
+        description: May be NULL. Absence of a value is flagged by is_missing.
       - name: is_missing
         tests: [not_null]
 
   - name: agg_daily_air_quality
-    description: Ringkasan harian polutan per kota, lengkap dengan tingkat kelengkapan data.
+    description: Daily pollutant summary per city, including how complete each average is.
     columns:
       - name: measurement_completeness_pct
-        description: Persentase jam yang benar-benar punya nilai pada hari tersebut.
+        description: Share of hours in the day that actually carry a value.

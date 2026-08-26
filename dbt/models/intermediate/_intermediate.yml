@@ -3,11 +3,11 @@ version: 2
 models:
   - name: int_measurements_unioned
     description: >
-      Gabungan seluruh pengukuran dari kedua domain dalam bentuk panjang.
-      Menjadi satu-satunya sumber bagi lapisan marts.
+      All measurements from both domains combined into a single long-format
+      stream. This is the only input the marts layer reads from.
     columns:
       - name: measurement_key
-        description: Kunci buatan dari lokasi, waktu, variabel, dan sumber.
+        description: Surrogate key derived from location, timestamp, variable and source.
         tests: [unique, not_null]
       - name: location_key
         tests: [not_null]

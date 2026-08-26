@@ -1,6 +1,6 @@
-"""Titik masuk ingestion.
+"""Ingestion entry point.
 
-Contoh:
+Examples:
     python -m ingestion.run_ingest --start 2025-01-01 --end 2025-01-07
     python -m ingestion.run_ingest --start 2025-01-01 --end 2025-01-07 \
         --locations jakarta singapore
@@ -25,25 +25,25 @@ logging.basicConfig(
 )
 log = logging.getLogger("ingest")
 
-# Jeda antar permintaan. Open-Meteo gratis untuk penggunaan non-komersial,
-# jadi kita membatasi diri sendiri agar tidak menyalahgunakannya.
+# Delay between requests. Open-Meteo is free for non-commercial use, so we
+# rate-limit ourselves rather than lean on their generosity.
 REQUEST_DELAY_SECONDS = 1.0
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Muat data cuaca dan kualitas udara.")
+    parser = argparse.ArgumentParser(description="Load weather and air quality data.")
     parser.add_argument("--start", type=date.fromisoformat, required=True)
     parser.add_argument("--end", type=date.fromisoformat, required=True)
     parser.add_argument(
         "--locations",
         nargs="*",
         default=None,
-        help="kunci lokasi; kosongkan untuk memuat semua",
+        help="location keys; omit to load every location",
     )
     parser.add_argument(
         "--skip-air-quality",
         action="store_true",
-        help="hanya muat data cuaca",
+        help="load weather data only",
     )
     return parser.parse_args(argv)
 
@@ -54,18 +54,18 @@ def select_locations(keys: list[str] | None) -> list[config.Location]:
     known = {loc.key: loc for loc in config.LOCATIONS}
     unknown = set(keys) - known.keys()
     if unknown:
-        raise SystemExit(f"Lokasi tidak dikenal: {', '.join(sorted(unknown))}")
+        raise SystemExit(f"Unknown location: {', '.join(sorted(unknown))}")
     return [known[k] for k in keys]
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     if args.start > args.end:
-        raise SystemExit("--start tidak boleh setelah --end")
+        raise SystemExit("--start must not be after --end")
 
     locations = select_locations(args.locations)
     log.info(
-        "Memuat %s sampai %s untuk %d lokasi",
+        "Loading %s to %s for %d locations",
         args.start, args.end, len(locations),
     )
 
@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
                 client, loc, args.start, args.end, config.WEATHER_VARIABLES
             )
             written = upsert_measurements(conn, "raw.weather_hourly", weather)
-            log.info("%-13s cuaca         %6d baris", loc.key, written)
+            log.info("%-13s weather      %7d rows", loc.key, written)
             total += written
             time.sleep(REQUEST_DELAY_SECONDS)
 
@@ -88,11 +88,11 @@ def main(argv: list[str] | None = None) -> int:
                 client, loc, args.start, args.end, config.AIR_QUALITY_VARIABLES
             )
             written = upsert_measurements(conn, "raw.air_quality_hourly", air)
-            log.info("%-13s kualitas udara %5d baris", loc.key, written)
+            log.info("%-13s air quality  %7d rows", loc.key, written)
             total += written
             time.sleep(REQUEST_DELAY_SECONDS)
 
-    log.info("Selesai. Total %d baris ditulis.", total)
+    log.info("Done. %d rows written in total.", total)
     return 0
 
 

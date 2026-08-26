@@ -1,18 +1,18 @@
 .PHONY: up down logs psql init reset test lint
 
-up:            ## nyalakan database
+up:            ## start the database
 	docker compose up -d
 
-down:          ## matikan, data tetap tersimpan
+down:          ## stop, keeping data
 	docker compose down
 
-reset:         ## matikan dan hapus data (hati-hati)
+reset:         ## stop and delete all data (destructive)
 	docker compose down -v
 
 logs:
 	docker compose logs -f postgres
 
-psql:          ## masuk ke shell SQL
+psql:          ## open a SQL shell
 	docker compose exec postgres psql -U aq_user -d air_quality
 
 test:
@@ -25,7 +25,7 @@ lint:
 seed:
 	cd dbt && dbt seed
 
-build:          ## seed + run + test sekaligus
+build:          ## seed, run and test in one go
 	cd dbt && dbt build
 
 dbt-docs:
