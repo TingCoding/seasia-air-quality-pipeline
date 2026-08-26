@@ -1,0 +1,7 @@
+location_key,city,country_code,country,latitude,longitude,timezone
+jakarta,Jakarta,ID,Indonesia,-6.2088,106.8456,Asia/Jakarta
+singapore,Singapore,SG,Singapore,1.3521,103.8198,Asia/Singapore
+bangkok,Bangkok,TH,Thailand,13.7563,100.5018,Asia/Bangkok
+kuala_lumpur,Kuala Lumpur,MY,Malaysia,3.1390,101.6869,Asia/Kuala_Lumpur
+manila,Manila,PH,Philippines,14.5995,120.9842,Asia/Manila
+hanoi,Hanoi,VN,Vietnam,21.0278,105.8342,Asia/Ho_Chi_Minh

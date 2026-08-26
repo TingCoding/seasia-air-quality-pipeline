@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: int_measurements_unioned
+    description: >
+      Gabungan seluruh pengukuran dari kedua domain dalam bentuk panjang.
+      Menjadi satu-satunya sumber bagi lapisan marts.
+    columns:
+      - name: measurement_key
+        description: Kunci buatan dari lokasi, waktu, variabel, dan sumber.
+        tests: [unique, not_null]
+      - name: location_key
+        tests: [not_null]
+      - name: observed_at
+        tests: [not_null]
+      - name: measurement_domain
+        tests:
+          - accepted_values:
+              values: [weather, air_quality]

@@ -1,0 +1,38 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Data mentah hasil ingestion, disimpan apa adanya tanpa transformasi.
+      Tidak boleh diubah oleh dbt — hanya dibaca.
+    schema: raw
+    tables:
+      - name: weather_hourly
+        description: Pengukuran cuaca per jam dari Open-Meteo Archive API.
+        columns:
+          - name: location_key
+            description: Kunci lokasi, merujuk ke seed locations.
+            tests: [not_null]
+          - name: observed_at
+            description: Waktu pengamatan dalam UTC.
+            tests: [not_null]
+          - name: variable
+            description: Nama variabel cuaca, contoh temperature_2m.
+            tests: [not_null]
+          - name: value
+            description: Nilai pengukuran. Boleh NULL bila data tidak tersedia.
+          - name: ingested_at
+            description: Waktu baris ini terakhir dimuat.
+            tests: [not_null]
+
+      - name: air_quality_hourly
+        description: Pengukuran kualitas udara per jam dari Open-Meteo Air Quality API.
+        columns:
+          - name: location_key
+            tests: [not_null]
+          - name: observed_at
+            tests: [not_null]
+          - name: variable
+            tests: [not_null]
+          - name: ingested_at
+            tests: [not_null]

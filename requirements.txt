@@ -3,7 +3,8 @@ tenacity==9.0.0
 psycopg[binary]==3.2.3
 python-dotenv==1.0.1
 pydantic==2.9.2
-dbt-postgres==1.8.2
+dbt-core==1.11.14
+dbt-postgres==1.11.0
 pytest==8.3.3
 respx==0.21.1
 ruff==0.7.4

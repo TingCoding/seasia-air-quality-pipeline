@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: dim_location
+    description: Dimensi lokasi beserta metadata geografis dan zona waktunya.
+    columns:
+      - name: location_key
+        description: Kunci utama lokasi.
+        tests: [unique, not_null]
+      - name: city
+        tests: [not_null]
+      - name: timezone
+        description: Nama zona waktu IANA, dipakai untuk menghitung waktu lokal.
+        tests: [not_null]
+      - name: has_measurements
+        description: Menandai apakah lokasi ini benar-benar punya data terkumpul.
+
+  - name: dim_date
+    description: Dimensi tanggal, dibangun dari rentang data yang tersedia.
+    columns:
+      - name: date_day
+        tests: [unique, not_null]
+      - name: day_of_week
+        tests:
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7]
+              quote: false
+
+  - name: fct_hourly_measurement
+    description: >
+      Tabel fakta utama. Satu baris mewakili satu pengukuran pada satu lokasi,
+      satu jam, satu variabel, dari satu sumber.
+    columns:
+      - name: measurement_key
+        tests: [unique, not_null]
+      - name: location_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location_key
+      - name: date_day
+        tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_day
+      - name: observed_at
+        tests: [not_null]
+      - name: measurement_value
+        description: Boleh NULL. Ketiadaan nilai ditandai kolom is_missing.
+      - name: is_missing
+        tests: [not_null]
+
+  - name: agg_daily_air_quality
+    description: Ringkasan harian polutan per kota, lengkap dengan tingkat kelengkapan data.
+    columns:
+      - name: measurement_completeness_pct
+        description: Persentase jam yang benar-benar punya nilai pada hari tersebut.

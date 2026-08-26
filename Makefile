@@ -20,3 +20,13 @@ test:
 
 lint:
 	ruff check .
+
+# ---------- dbt ----------
+seed:
+	cd dbt && dbt seed
+
+build:          ## seed + run + test sekaligus
+	cd dbt && dbt build
+
+dbt-docs:
+	cd dbt && dbt docs generate && dbt docs serve

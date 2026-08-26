@@ -1,0 +1,15 @@
+# Salin menjadi profiles.yml lalu isi passwordnya.
+# profiles.yml sudah masuk .gitignore — jangan pernah di-commit.
+
+seasia_air_quality:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: aq_user
+      password: isi_password_anda
+      dbname: air_quality
+      schema: dbt
+      threads: 4
