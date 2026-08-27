@@ -109,7 +109,7 @@ lost at ingestion time.
 
 ## Data quality checks
 
-The pipeline runs **48 automated tests** on every `dbt build`.
+The pipeline runs automated tests on every `dbt build`, across all three layers.
 
 **Generic tests** — uniqueness of surrogate keys, not-null constraints on all key
 columns, accepted values for variable names and domains, and referential integrity
@@ -117,11 +117,23 @@ between the fact table and both dimensions.
 
 **Singular tests** — written as SQL in `dbt/tests/`:
 
-| Test | What it catches |
-|---|---|
-| `assert_no_negative_pollutant_values` | Sensor calibration faults and parsing errors |
-| `assert_humidity_within_range` | Values outside the physically possible 0–100% range |
-| `assert_no_duplicate_hours` | Regressions in ingestion idempotency |
+| Test | Severity | What it catches |
+|---|---|---|
+| `assert_no_negative_pollutant_values` | error | Sensor calibration faults and parsing errors |
+| `assert_humidity_within_range` | error | Values outside the physically possible 0–100% range |
+| `assert_values_within_physical_range` | error | Unit errors and impossible readings across every variable |
+| `assert_no_duplicate_hours` | error | Regressions in ingestion idempotency |
+| `assert_no_long_data_gaps` | warn | Series that silently stop reporting for over 24 hours |
+| `assert_daily_completeness_is_plausible` | warn | Days averaged from less than 75% of expected hours |
+
+Failures that reflect the upstream source rather than a defect in this pipeline are
+raised as warnings, so they stay visible without blocking a build.
+
+**Results are persisted.** The `log_dbt_results` macro runs `on-run-end` and appends
+every test outcome to `audit.data_quality_log`. Test results otherwise live only in the
+terminal and vanish when the window closes; stored in a table, data quality becomes
+something that can be queried over time — which check fails most often, whether a
+problem is new or long-standing, and whether a fix actually held.
 
 Missing values are deliberately **kept, not dropped**. A gap in the data is
 information: `fct_hourly_measurement.is_missing` flags it, and
@@ -161,10 +173,9 @@ Known limitations, stated honestly:
 
 Planned:
 
-- Persist test results to `audit.data_quality_log` (the table already exists)
-- Detect data gaps longer than 24 hours
 - Schedule daily incremental loads via GitHub Actions
 - Continuous integration running `pytest` and `dbt build` on every push
+- Incremental materialisation for the fact table
 
 ## License
 

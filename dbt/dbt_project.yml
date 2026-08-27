@@ -10,6 +10,10 @@ test-paths: ["tests"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
+# Persist every test outcome so data quality can be tracked over time.
+on-run-end:
+  - "{{ log_dbt_results(results) }}"
+
 models:
   seasia_air_quality:
     staging:

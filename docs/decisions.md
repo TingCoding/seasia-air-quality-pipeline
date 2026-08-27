@@ -108,3 +108,33 @@ that have nothing to do with the code, and a reviewer who cannot start it will s
 stop there.
 
 **Consequences.** One more variable to document in `.env.example`.
+
+---
+
+## 9. Test results are persisted, not just printed
+
+**Decision.** An `on-run-end` macro writes every dbt test outcome into
+`audit.data_quality_log`.
+
+**Why.** Test results that exist only in terminal output disappear when the window
+closes. Stored in a table, data quality becomes queryable over time: which check fails
+most often, whether a failure is new or long-standing, and whether a fix actually held.
+A single red run tells you something is wrong; a history tells you what is wrong.
+
+**Consequences.** The audit table grows with every run and will eventually need a
+retention policy.
+
+---
+
+## 10. Source-driven failures are warnings, not errors
+
+**Decision.** `assert_no_long_data_gaps` and `assert_daily_completeness_is_plausible`
+run at `warn` severity; everything else fails the build.
+
+**Why.** A gap in the upstream feed is not a defect in this pipeline. Treating it as a
+build failure trains whoever maintains this to ignore red runs, which is worse than
+having no test at all. Errors are reserved for conditions that indicate something here
+is broken — impossible values, duplicate rows, broken referential integrity.
+
+**Consequences.** Warnings can be overlooked if nobody reads the run summary. The audit
+table in decision 9 is the mitigation.
