@@ -36,3 +36,38 @@ sources:
             tests: [not_null]
           - name: ingested_at
             tests: [not_null]
+
+      - name: openaq_stations
+        description: >
+          Station metadata as the OpenAQ API reports it now. Distinct from the
+          openaq_stations seed, which records what was selected and when.
+        columns:
+          - name: station_id
+            tests: [unique, not_null]
+          - name: location_key
+            tests: [not_null]
+
+      - name: openaq_sensors
+        description: One row per measured parameter at a station.
+        columns:
+          - name: sensor_id
+            tests: [unique, not_null]
+          - name: station_id
+            tests: [not_null]
+
+      - name: openaq_measurements
+        description: >
+          Hourly averages from monitoring stations. Unlike the Open-Meteo
+          tables, an hour with no reading is an absent row rather than a row
+          holding NULL -- the API simply does not return it.
+        columns:
+          - name: sensor_id
+            tests: [not_null]
+          - name: observed_at
+            tests: [not_null]
+          - name: parameter
+            tests: [not_null]
+          - name: coverage_pct
+            description: >
+              Share of the underlying readings the hourly mean was built from,
+              as reported by OpenAQ.

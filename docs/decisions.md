@@ -276,3 +276,67 @@ installations.
 
 **Consequences.** Timestamp columns arrive as text and are cast downstream in dbt, where
 the conversion is visible rather than implicit.
+
+---
+
+## 19. Measured and modelled values live in separate fact tables
+
+**Decision.** `fct_station_measurement` holds OpenAQ station readings;
+`fct_hourly_measurement` holds Open-Meteo modelled values. They are compared in
+`agg_daily_pm25_comparison`, not merged.
+
+**Why.** A reanalysis model and a physical instrument answer different questions and
+carry different uncertainty. Placing them in one table with a `source` column would let
+a reader average across both without noticing, producing a figure that means nothing.
+Separation makes the comparison an explicit act.
+
+**Consequences.** Anyone wanting both must join, which is the intended friction.
+
+---
+
+## 20. Completeness for OpenAQ is measured against expected hours, not NULLs
+
+**Decision.** `agg_daily_station_coverage` compares observed hours against the 24 a full
+day should contain.
+
+**Why.** The two sources express absence differently. Open-Meteo returns every hour and
+sets the value to NULL when it has none; OpenAQ omits the row entirely. The NULL-based
+checks written for the first source therefore find nothing in the second, and a sensor
+that stopped reporting would pass every test while producing no data. Loading revealed
+this directly: `count(*)` and `count(value)` were identical for every OpenAQ series, yet
+one Jakarta series held only a third of the hours in its window.
+
+**Consequences.** Two different completeness measures exist in the warehouse. Their
+column names say which is which.
+
+---
+
+## 21. Provider class is surfaced, not resolved
+
+**Decision.** `dim_station.station_class` marks each station as `reference` or
+`low_cost`. No station is excluded on that basis.
+
+**Why.** OpenAQ presents a government reference monitor and a community sensor under one
+schema, but they do not carry equal weight. Dropping the low-cost sensors would discard
+most of the coverage in several cities; treating them as equivalent would overstate
+precision. Labelling lets whoever queries the warehouse decide, which is where the
+decision belongs.
+
+**Consequences.** Any analysis that ignores `station_class` is mixing instrument grades
+without saying so.
+
+---
+
+## 22. Casts from the registry are guarded, not direct
+
+**Decision.** `stg_openaq_registry` checks a value's shape with a pattern before casting
+it, and records `has_unparseable_dates` when a non-empty cell fails to parse.
+
+**Why.** A direct `::timestamptz` on a hand-editable file fails the entire build on a
+single empty cell — which is exactly what happened. The registry is meant to be reviewed
+and corrected by people, so its contents cannot be assumed well-formed. Turning a bad
+value into NULL and flagging it lets the tests report the problem, instead of one stray
+space stopping every downstream model.
+
+**Consequences.** A malformed date becomes NULL, so anything depending on those columns
+must handle NULL. The flag column exists so the fault is still visible.

@@ -35,3 +35,42 @@ models:
         tests:
           - accepted_values:
               values: [air_quality]
+
+  - name: stg_openaq_stations
+    description: Station metadata as the API reports it now.
+    columns:
+      - name: station_id
+        tests: [unique, not_null]
+      - name: location_key
+        tests: [not_null]
+
+  - name: stg_openaq_registry
+    description: The committed station registry, with timestamps cast explicitly.
+    columns:
+      - name: station_id
+        tests: [unique, not_null]
+      - name: location_key
+        tests: [not_null]
+      - name: selected_on
+        tests: [not_null]
+      - name: has_unparseable_dates
+        description: >
+          True when a registry cell held text that could not be read as a date.
+          Surfaced rather than hidden, because the file is edited by hand.
+
+  - name: stg_openaq_measurements
+    description: >
+      Hourly station measurements with parameter names reconciled against the
+      Open-Meteo vocabulary.
+    columns:
+      - name: sensor_id
+        tests: [not_null]
+      - name: observed_at
+        tests: [not_null]
+      - name: variable_name
+        tests:
+          - not_null
+          - accepted_values:
+              values: [pm2_5, pm10]
+      - name: measurement_unit
+        description: Retained per row rather than assumed; providers differ.

@@ -56,3 +56,70 @@ models:
     columns:
       - name: measurement_completeness_pct
         description: Share of hours in the day that actually carry a value.
+
+  - name: dim_station
+    description: >
+      Physical monitoring stations, combining what was selected for ingestion
+      with what the API reports today.
+    columns:
+      - name: station_id
+        tests: [unique, not_null]
+      - name: location_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location_key
+      - name: station_class
+        description: >
+          reference for government-operated monitors, low_cost for community
+          sensors. The two do not carry equal weight.
+        tests:
+          - accepted_values:
+              values: [reference, low_cost]
+      - name: missing_from_api
+        description: True when a pinned station is no longer returned by the API.
+      - name: selected_on
+        tests: [not_null]
+
+  - name: fct_station_measurement
+    description: >
+      Measured hourly values from monitoring stations. Kept separate from
+      fct_hourly_measurement, which holds modelled values.
+    columns:
+      - name: station_measurement_key
+        tests: [unique, not_null]
+      - name: station_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_station')
+              field: station_id
+      - name: observed_at
+        tests: [not_null]
+      - name: variable_name
+        tests:
+          - accepted_values:
+              values: [pm2_5, pm10]
+
+  - name: agg_daily_station_coverage
+    description: >
+      Daily reporting completeness per station, measured against the 24 hours a
+      full day should contain rather than against NULL values.
+    columns:
+      - name: reporting_completeness_pct
+        tests: [not_null]
+
+  - name: agg_daily_pm25_comparison
+    description: >
+      Modelled PM2.5 against measured PM2.5 per city per day, with the hour
+      counts behind each side.
+    columns:
+      - name: location_key
+        tests: [not_null]
+      - name: date_day
+        tests: [not_null]
+      - name: is_comparable
+        description: >
+          True only when both sides rest on at least 20 hours of data. Headline
+          comparisons should filter on this.
