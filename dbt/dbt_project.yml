@@ -29,3 +29,23 @@ models:
 seeds:
   seasia_air_quality:
     +schema: seeds
+
+    # Column types are declared rather than inferred. Seed files are the one
+    # place a human edits data by hand, and a spreadsheet application will
+    # happily rewrite an ISO date as 28/08/2026 on save. Declaring the types
+    # keeps the load independent of both the file's formatting and the
+    # database's datestyle setting.
+    openaq_stations:
+      +column_types:
+        location_key: varchar(64)
+        station_id: bigint
+        station_name: varchar(256)
+        provider: varchar(128)
+        owner: varchar(256)
+        is_monitor: boolean
+        latitude: double precision
+        longitude: double precision
+        timezone: varchar(64)
+        first_seen_at: varchar(64)
+        last_seen_at: varchar(64)
+        selected_on: varchar(32)

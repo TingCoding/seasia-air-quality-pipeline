@@ -30,3 +30,11 @@ build:          ## seed, run and test in one go
 
 dbt-docs:
 	cd dbt && dbt docs generate && dbt docs serve
+
+# ---------- OpenAQ ----------
+openaq-schema:  ## apply the OpenAQ tables to a running database
+	docker compose exec -T postgres psql -U aq_user -d air_quality \
+		-f /docker-entrypoint-initdb.d/002_openaq.sql
+
+openaq-discover: ## propose a station list and write it to the registry
+	python -m ingestion.run_openaq --discover

@@ -138,3 +138,141 @@ is broken — impossible values, duplicate rows, broken referential integrity.
 
 **Consequences.** Warnings can be overlooked if nobody reads the run summary. The audit
 table in decision 9 is the mitigation.
+
+---
+
+## 11. OpenAQ station selection follows written rules
+
+**Decision.** Stations enter the warehouse only if they expose a wanted parameter,
+have reported within 90 days, and are not mobile. Of those that qualify, the five
+most recently active per city are kept. The thresholds live in `ingestion/config.py`.
+
+**Why.** A survey of the six cities found 27 registered stations around Jakarta of
+which only 2 still report, and over 100 around Bangkok of which roughly 80 report
+daily. Several entries are abandoned test uploads — one provider's Singapore listings
+include stations named `hhhhhhhh`, `try 2` and `t`, none with any data. Choosing
+stations by eye would be unrepeatable and impossible to defend later; encoding the
+criteria makes the selection auditable and identical for every city.
+
+**Consequences.** A genuinely useful station that has been quiet for 91 days is
+excluded. The threshold is a judgement call and is deliberately easy to change.
+
+---
+
+## 12. Only µg/m³ parameters are ingested for now
+
+**Decision.** OpenAQ ingestion is limited to `pm25` and `pm10`.
+
+**Why.** Gases are reported inconsistently across networks: Air4Thai sends CO, NO₂,
+O₃ and SO₂ in ppm, while Hanoi Air Quality sends the same pollutants in µg/m³. One
+Bangkok station reports CO in ppm *and* ppb simultaneously, and a Jakarta station
+reports temperature in both Fahrenheit and Celsius. Loading these without explicit
+conversion would produce numbers that look plausible and are wrong by orders of
+magnitude. PM2.5 and PM10 arrive in µg/m³ from every provider observed.
+
+**Consequences.** Four pollutants available from OpenAQ are left on the table until
+unit conversion is implemented as a first-class step rather than an afterthought.
+
+---
+
+## 13. Duplicate sensors are preserved, not resolved at ingestion
+
+**Decision.** When a station exposes two sensors for the same parameter, both are
+loaded.
+
+**Why.** Deciding which of two co-located sensors to trust is an analytical question,
+not an ingestion one. Silently dropping one at load time would hide the duplication
+from the layer built to detect it, and would be irreversible without a reload.
+
+**Consequences.** Anything aggregating across sensors must group by sensor first, or
+a station with two PM2.5 sensors will be double-counted.
+
+---
+
+## 14. OpenAQ tables are separate from Open-Meteo tables
+
+**Decision.** OpenAQ writes to `raw.openaq_*` rather than into the shared
+`raw.air_quality_hourly`.
+
+**Why.** OpenAQ measurements attach to identifiable physical stations, each with an
+operator, an instrument, a lifespan and a coverage figure per hourly average.
+Open-Meteo values are modelled at a coordinate and carry none of that. Forcing both
+into one table would mean discarding the metadata that makes station data worth
+having in the first place. The two are reconciled in dbt, where the join is explicit
+and visible.
+
+**Consequences.** One more set of tables, and the union happens later in the stack.
+
+---
+
+## 15. Station selection is pinned to a file, not re-derived per run (revises 11)
+
+**Decision.** `--discover` proposes stations and writes them to
+`dbt/seeds/openaq_stations.csv`. A normal run reads that file and loads exactly
+those stations. Decision 11 described the selection rules; this decision changes
+when they are applied.
+
+**Why.** The rules in decision 11 were applied on every run, and one of them ranks
+stations by how recently they reported. Because that value advances continuously, two
+runs thirteen hours apart selected entirely different stations for Bangkok — the same
+command, a different result, and a warehouse holding a blend nobody could account for.
+Reproducibility is not a property that can be added later; a pipeline that cannot be
+re-run to the same outcome cannot be trusted or debugged.
+
+Rules still decide *what qualifies*. A human decides *what is used*, once, and the
+answer is committed to version control where it can be reviewed and its history read.
+
+**Consequences.** Adding a station is now a deliberate act with a commit behind it. A
+station that goes dark stays in the registry until someone removes it — which is why
+the loader logs a warning when a pinned station is no longer returned, rather than
+skipping it silently.
+
+---
+
+## 16. Time windows are sent to OpenAQ as explicit UTC
+
+**Decision.** `datetime_from` and `datetime_to` are sent as full UTC datetimes rather
+than bare dates.
+
+**Why.** OpenAQ interprets a bare date in the station's local time. A request for
+2025-01-01 in Bangkok returned rows beginning 2024-12-31T17:00Z — the UTC+7 offset. The
+window therefore shifted by a different amount in every city, which would have made
+cross-city comparison quietly wrong. This was found by reading the `min(observed_at)`
+of loaded data rather than by reading the documentation, which is the usual way such
+things are found.
+
+**Consequences.** `--end` is now inclusive of the whole UTC day. Data loaded before this
+change is offset by the city's UTC offset and should be reloaded.
+
+---
+
+## 17. The station registry doubles as a dbt seed
+
+**Decision.** The registry lives at `dbt/seeds/openaq_stations.csv`, serving both as the
+input to ingestion and as the seed behind the station dimension.
+
+**Why.** One file, one truth. It also makes a useful comparison trivial: the registry
+records what was selected and when, while `raw.openaq_stations` records what the API
+reports now. Asking whether a chosen station has since gone quiet becomes a query
+rather than an investigation.
+
+**Consequences.** A file with two consumers needs care — changing its columns affects
+both ingestion and the dbt models.
+
+---
+
+## 18. Seed column types are declared, not inferred
+
+**Decision.** `dbt_project.yml` declares the column types for the station registry seed,
+and the registry reader accepts several date formats.
+
+**Why.** The registry is deliberately a file people edit by hand. Opening it in a
+spreadsheet application and saving rewrites `2026-08-28` as `28/08/2026` and `True` as
+`TRUE`, which broke the seed load with a datestyle error. The choice was to forbid that
+workflow or to tolerate it; tolerating it is better, because a file meant for human
+review will be opened by humans using whatever tool they have. Declaring the types also
+makes the load independent of the database's `datestyle` setting, which differs between
+installations.
+
+**Consequences.** Timestamp columns arrive as text and are cast downstream in dbt, where
+the conversion is visible rather than implicit.

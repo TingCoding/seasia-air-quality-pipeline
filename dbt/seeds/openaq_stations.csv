@@ -1,0 +1,28 @@
+location_key,station_id,station_name,provider,owner,is_monitor,latitude,longitude,timezone,first_seen_at,last_seen_at,selected_on
+bangkok,701,Sukhothai Thammathirat Open University,Air4Thai,Unknown Governmental Organization,True,13.907861,100.535641,Asia/Bangkok,2016-01-30T02:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+bangkok,906,Residence for Dept. of Mineral Resources,Air4Thai,Unknown Governmental Organization,True,13.652141,100.531805,Asia/Bangkok,2016-01-30T03:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+bangkok,2167,Highway District,Air4Thai,Unknown Governmental Organization,True,13.7054879,100.315622,Asia/Bangkok,2016-02-11T11:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+bangkok,2352,Thonburi Power Sub-Station,Air4Thai,Unknown Governmental Organization,True,13.727622,100.486568,Asia/Bangkok,2022-10-04T19:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+bangkok,2375,Bodindecha Sing Singhaseni School,Air4Thai,Unknown Governmental Organization,True,13.769634,100.614567,Asia/Bangkok,2016-01-30T02:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+hanoi,2161292,"Số 46, phố Lưu Quang Vũ",Hanoi Air Quality Monitoring Network,Unknown Governmental Organization,True,21.0152,105.7999,Asia/Bangkok,2024-01-29T16:00:00Z,2026-08-28T02:00:00Z,2026-08-28
+hanoi,2161306,Minh Khai - Bắc Từ Liêm,Hanoi Air Quality Monitoring Network,Unknown Governmental Organization,True,21.05,105.74,Asia/Bangkok,2024-01-29T16:00:00Z,2026-08-28T02:00:00Z,2026-08-28
+hanoi,4946812,Công viên Nhân Chính - Khuất Duy Tiến,Hanoi Air Quality Monitoring Network,Unknown Governmental Organization,True,21.0031,105.7947,Asia/Bangkok,2025-07-03T15:40:00Z,2026-08-28T07:20:00Z,2026-08-28
+hanoi,4946813,Số 1 đường Giải Phóng - phường Bạch Mai - ĐHBK ,Hanoi Air Quality Monitoring Network,Unknown Governmental Organization,True,21.0052,105.8418,Asia/Bangkok,2025-07-03T15:40:00Z,2026-08-28T07:20:00Z,2026-08-28
+hanoi,6123215,OceanPark,AirGradient,AirGradient,False,20.9933,105.9441,Asia/Bangkok,2025-11-08T06:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+jakarta,1894639,Jakarta,Clarity,Clarity,False,-6.09657,106.96135,Asia/Jakarta,2024-01-25T08:36:19Z,2026-08-28T04:56:01Z,2026-08-28
+jakarta,6455006,BMKG 1,AirGradient,AirGradient,False,-6.1557694,106.8423941,Asia/Jakarta,2026-07-22T04:00:00Z,2026-08-26T06:00:00Z,2026-08-28
+kuala_lumpur,3331918,Taman Tun Dr. Ismail,AirGradient,Aizat Faiz,False,3.141110626,101.6274985,Asia/Kuala_Lumpur,2024-12-23T07:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+kuala_lumpur,3400978,Setia Eco Park,AirGradient,Dr Han,False,3.1113299,101.476412,Asia/Kuala_Lumpur,2025-02-11T18:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+kuala_lumpur,5894144,Bukit Bintang,Clarity,Clarity,False,3.14601,101.71021,Asia/Kuala_Lumpur,2025-09-24T04:09:40Z,2026-07-25T10:46:56Z,2026-08-28
+kuala_lumpur,6485120,ENVIRO EXCELTECH SDN BHD,AirGradient,AirGradient,False,3.0044,101.7088,Asia/Kuala_Lumpur,2026-08-12T06:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+kuala_lumpur,6488126,Mont Kiara,AirGradient,AirGradient,False,3.1696,101.6528,Asia/Kuala_Lumpur,2026-08-14T07:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+manila,4565934,Manila Observatory,AirGradient,Manila Observatory,False,14.6354,121.0779,Asia/Manila,2025-05-30T07:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+manila,5975180,Valenzuela,AirGradient,DLSU,False,14.688555,120.970708,Asia/Manila,2025-10-01T08:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+manila,5976206,Las Pinas,AirGradient,DLSU,False,14.437546,121.000088,Asia/Manila,2025-10-02T01:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+manila,6230501,North Caloocan Nova Romania - Alora (download airgradient mobile app for realtime data),AirGradient,AirGradient,False,14.7459495,121.0101457,Asia/Manila,2026-02-06T10:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+manila,6340868,Tivoli,AirGradient,AirGradient,False,14.676664,121.095814,Asia/Manila,2026-05-08T23:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+singapore,3040714,Midwood,AirGradient,Lawliet,False,1.3641,103.7637,Asia/Singapore,2024-08-30T21:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+singapore,3400991,Potong Pasir Singapore,AirGradient,Unknown Person,False,1.330931,103.868663,Asia/Singapore,2025-02-11T18:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+singapore,5905179,Shelford,AirGradient,AirGradient,False,1.324983,103.812506,Asia/Singapore,2025-09-25T02:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+singapore,6191434,Joo Chiat Place,AirGradient,AirGradient,False,1.313748,103.90176,Asia/Singapore,2026-01-06T09:00:00Z,2026-08-28T07:00:00Z,2026-08-28
+singapore,6289675,CGB,AirGradient,AirGradient,False,1.28485262,103.8291365,Asia/Singapore,2026-03-30T05:00:00Z,2026-08-28T07:00:00Z,2026-08-28
