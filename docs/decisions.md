@@ -340,3 +340,25 @@ space stopping every downstream model.
 
 **Consequences.** A malformed date becomes NULL, so anything depending on those columns
 must handle NULL. The flag column exists so the fault is still visible.
+
+---
+
+## 23. CI runs against real PostgreSQL with a deliberately awkward fixture
+
+**Decision.** The CI workflow starts a PostgreSQL service, applies the schema, loads
+`sql/fixtures/ci_sample.sql`, and runs `dbt build` in full.
+
+**Why.** The models are written in PostgreSQL SQL and depend on it — `generate_series`,
+`AT TIME ZONE`, regex matching. Testing against anything else would test a different
+database from the one this pipeline runs on. And building against an empty database
+only proves the SQL parses; the fixture makes the data quality tests do real work on
+every push.
+
+The fixture contents were chosen from the failures encountered while building this
+pipeline: a modelled hour holding NULL, a station hour that is absent rather than NULL,
+and two sensors at one station reporting the same parameter. Each one broke something
+at least once. A regression test suite is most useful when it is built from actual
+mistakes rather than imagined ones.
+
+**Consequences.** CI takes longer than a lint-and-unit-test job, and the fixture must be
+maintained alongside the models.

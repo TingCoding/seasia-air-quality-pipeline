@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # A real PostgreSQL instance rather than a mock. The models are written in
+    # PostgreSQL SQL and several of them lean on it -- generate_series, AT TIME
+    # ZONE, regex matching -- so anything less would test a different database
+    # from the one this pipeline runs on.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aq_user
+          POSTGRES_PASSWORD: ci_password
+          POSTGRES_DB: air_quality
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aq_user -d air_quality"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: aq_user
+      POSTGRES_PASSWORD: ci_password
+      POSTGRES_DB: air_quality
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Unit tests
+        run: pytest -q
+
+      - name: Apply schema and load fixtures
+        run: |
+          export PGPASSWORD="$POSTGRES_PASSWORD"
+          psql -h localhost -U aq_user -d air_quality -v ON_ERROR_STOP=1 \
+            -f sql/ddl/001_init.sql
+          psql -h localhost -U aq_user -d air_quality -v ON_ERROR_STOP=1 \
+            -f sql/ddl/002_openaq.sql
+          psql -h localhost -U aq_user -d air_quality -v ON_ERROR_STOP=1 \
+            -f sql/fixtures/ci_sample.sql
+
+      - name: Configure dbt
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml <<'PROFILE'
+          seasia_air_quality:
+            target: ci
+            outputs:
+              ci:
+                type: postgres
+                host: localhost
+                port: 5432
+                user: aq_user
+                password: ci_password
+                dbname: air_quality
+                schema: dbt
+                threads: 4
+          PROFILE
+
+      - name: dbt build
+        working-directory: dbt
+        run: dbt build --target ci
+
+      - name: Show data quality log
+        if: always()
+        working-directory: dbt
+        run: |
+          export PGPASSWORD="$POSTGRES_PASSWORD"
+          psql -h localhost -U aq_user -d air_quality -c \
+            "SELECT check_name, status, failed_rows
+               FROM audit.data_quality_log
+              WHERE status <> 'pass'
+              ORDER BY check_name;"
